@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-jupiter",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "description": "n8n community package for Jupiter DEX API integration",
   "keywords": [
     "n8n-community-node-package",
