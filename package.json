@@ -1,19 +1,25 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-nodes-jupiter",
   "version": "0.1.0",
-  "description": "",
+  "description": "n8n community package for Jupiter DEX API integration",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "jupiter",
+    "solana",
+    "dex",
+    "defi",
+    "swap",
+    "tokens"
   ],
   "license": "MIT",
   "homepage": "",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "Jupiter Community",
+    "email": "community@jup.ag"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/jupiter/n8n-nodes-jupiter.git"
   },
   "engines": {
     "node": ">=20.15"
@@ -33,12 +39,11 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/JupiterApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/JupiterToken/JupiterToken.node.js",
+      "dist/nodes/JupiterUltra/JupiterUltra.node.js"
     ]
   },
   "devDependencies": {
