@@ -14,7 +14,7 @@ export class JupiterToken implements INodeType {
 		icon: 'file:jupiterLogo.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Jupiter Token API operations',
+		description: 'Jupiter Token API v2 operations',
 		defaults: {
 			name: 'Jupiter Token',
 		},
@@ -31,8 +31,8 @@ export class JupiterToken implements INodeType {
 				displayName: 'Base URL',
 				name: 'baseUrl',
 				type: 'string',
-				default: 'https://lite-api.jup.ag/tokens/v1',
-				description: 'Base URL for Jupiter Token API',
+				default: 'https://lite-api.jup.ag/tokens/v2',
+				description: 'Base URL for Jupiter Token API v2',
 			},
 			{
 				displayName: 'Operation',
@@ -41,80 +41,120 @@ export class JupiterToken implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Get All Tokens',
-						value: 'getAllTokens',
-						description: 'Get full token list with metadata',
-						action: 'Get all tokens',
+						name: 'Search',
+						value: 'search',
+						description: 'Search tokens by symbol, name, or mint address',
+						action: 'Search tokens',
 					},
 					{
-						name: 'Get Mints in Market',
-						value: 'getMintsInMarket',
-						description: 'Get mints in a pool/market',
-						action: 'Get mints in market',
+						name: 'Get by Tag',
+						value: 'tag',
+						description: 'Get tokens by tag (lst, verified)',
+						action: 'Get tokens by tag',
 					},
 					{
-						name: 'Get New Tokens',
-						value: 'getNewTokens',
-						description: 'Get paginated list of newest tokens',
-						action: 'Get new tokens',
+						name: 'Get by Category',
+						value: 'category',
+						description: 'Get tokens by category and time interval',
+						action: 'Get tokens by category',
 					},
 					{
-						name: 'Get Tagged Tokens',
-						value: 'getTaggedTokens',
-						description: 'Get tokens by tag list',
-						action: 'Get tagged tokens',
-					},
-					{
-						name: 'Get Token',
-						value: 'getToken',
-						description: 'Get metadata for a single token',
-						action: 'Get token metadata',
-					},
-					{
-						name: 'Get Tradable Mints',
-						value: 'getTradableMints',
-						description: 'Get list of all tradable mints',
-						action: 'Get tradable mints',
+						name: 'Get Recent',
+						value: 'recent',
+						description: 'Get tokens with recently created first pool',
+						action: 'Get recent tokens',
 					},
 				],
-				default: 'getAllTokens',
+				default: 'search',
 			},
 			{
-				displayName: 'Mint Address',
-				name: 'mintAddress',
+				displayName: 'Search Query',
+				name: 'query',
 				type: 'string',
 				default: '',
-				placeholder: 'So11111111111111111111111111111111111111112',
-				description: 'Token mint address',
+				placeholder: 'USDC, So11111111111111111111111111111111111111112, or token name',
+				description: 'Search by symbol, name, or mint address. Multiple mint addresses separated by commas (max 100).',
 				displayOptions: {
 					show: {
-						operation: ['getToken'],
+						operation: ['search'],
 					},
 				},
 			},
 			{
-				displayName: 'Market Address',
-				name: 'marketAddress',
-				type: 'string',
-				default: '',
-				placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-				description: 'Market/pool address',
+				displayName: 'Tag',
+				name: 'tag',
+				type: 'options',
+				options: [
+					{
+						name: 'LST (Liquid Staking Tokens)',
+						value: 'lst',
+					},
+					{
+						name: 'Verified',
+						value: 'verified',
+					},
+				],
+				default: 'verified',
+				description: 'Token tag to filter by',
 				displayOptions: {
 					show: {
-						operation: ['getMintsInMarket'],
+						operation: ['tag'],
 					},
 				},
 			},
 			{
-				displayName: 'Tag List',
-				name: 'tagList',
-				type: 'string',
-				default: '',
-				placeholder: 'verified,community',
-				description: 'Comma-separated list of tags',
+				displayName: 'Category',
+				name: 'category',
+				type: 'options',
+				options: [
+					{
+						name: 'Top Organic Score',
+						value: 'toporganicscore',
+					},
+					{
+						name: 'Top Traded',
+						value: 'toptraded',
+					},
+					{
+						name: 'Top Trending',
+						value: 'toptrending',
+					},
+				],
+				default: 'toporganicscore',
+				description: 'Category to get tokens from',
 				displayOptions: {
 					show: {
-						operation: ['getTaggedTokens'],
+						operation: ['category'],
+					},
+				},
+			},
+			{
+				displayName: 'Time Interval',
+				name: 'interval',
+				type: 'options',
+				options: [
+					{
+						name: '5 Minutes',
+						value: '5m',
+					},
+					{
+						name: '1 Hour',
+						value: '1h',
+					},
+					{
+						name: '6 Hours',
+						value: '6h',
+					},
+					{
+						name: '24 Hours',
+						value: '24h',
+					},
+				],
+				default: '24h',
+				description: 'Time interval for category data',
+				displayOptions: {
+					show: {
+						operation: ['category'],
 					},
 				},
 			},
@@ -129,19 +169,7 @@ export class JupiterToken implements INodeType {
 				description: 'Max number of results to return',
 				displayOptions: {
 					show: {
-						operation: ['getNewTokens'],
-					},
-				},
-			},
-			{
-				displayName: 'Offset',
-				name: 'offset',
-				type: 'number',
-				default: 0,
-				description: 'Pagination offset',
-				displayOptions: {
-					show: {
-						operation: ['getNewTokens'],
+						operation: ['search'],
 					},
 				},
 			},
@@ -161,35 +189,28 @@ export class JupiterToken implements INodeType {
 				const queryParams: Record<string, string | number> = {};
 
 				switch (operation) {
-					case 'getToken':
-						const mintAddress = this.getNodeParameter('mintAddress', itemIndex) as string;
-						url = `${baseUrl}/token/${mintAddress}`;
-						break;
-
-					case 'getNewTokens':
+					case 'search':
+						const query = this.getNodeParameter('query', itemIndex) as string;
 						const limit = this.getNodeParameter('limit', itemIndex) as number;
-						const offset = this.getNodeParameter('offset', itemIndex) as number;
-						url = `${baseUrl}/new`;
+						
+						url = `${baseUrl}/search`;
+						if (query) queryParams.query = query;
 						if (limit) queryParams.limit = limit;
-						if (offset) queryParams.offset = offset;
 						break;
 
-					case 'getAllTokens':
-						url = `${baseUrl}/all`;
+					case 'tag':
+						const tag = this.getNodeParameter('tag', itemIndex) as string;
+						url = `${baseUrl}/tag/${tag}`;
 						break;
 
-					case 'getTaggedTokens':
-						const tagList = this.getNodeParameter('tagList', itemIndex) as string;
-						url = `${baseUrl}/tagged/${tagList}`;
+					case 'category':
+						const category = this.getNodeParameter('category', itemIndex) as string;
+						const interval = this.getNodeParameter('interval', itemIndex) as string;
+						url = `${baseUrl}/${category}/${interval}`;
 						break;
 
-					case 'getMintsInMarket':
-						const marketAddress = this.getNodeParameter('marketAddress', itemIndex) as string;
-						url = `${baseUrl}/market/${marketAddress}/mints`;
-						break;
-
-					case 'getTradableMints':
-						url = `${baseUrl}/mints/tradable`;
+					case 'recent':
+						url = `${baseUrl}/recent`;
 						break;
 
 					default:
