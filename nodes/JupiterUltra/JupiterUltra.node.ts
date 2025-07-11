@@ -67,7 +67,7 @@ export class JupiterUltra implements INodeType {
 					{
 						name: 'Search',
 						value: 'search',
-						description: 'Fuzzy search tokens',
+						description: 'Search tokens by symbol, name, or mint',
 						action: 'Search tokens',
 					},
 					{
@@ -79,10 +79,12 @@ export class JupiterUltra implements INodeType {
 				],
 				default: 'balances',
 			},
+			// Order operation parameters
 			{
 				displayName: 'Input Mint',
 				name: 'inputMint',
 				type: 'string',
+				required: true,
 				default: '',
 				placeholder: 'So11111111111111111111111111111111111111112',
 				description: 'Input token mint address',
@@ -96,6 +98,7 @@ export class JupiterUltra implements INodeType {
 				displayName: 'Output Mint',
 				name: 'outputMint',
 				type: 'string',
+				required: true,
 				default: '',
 				placeholder: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
 				description: 'Output token mint address',
@@ -109,6 +112,7 @@ export class JupiterUltra implements INodeType {
 				displayName: 'Amount',
 				name: 'amount',
 				type: 'string',
+				required: true,
 				default: '',
 				placeholder: '1000000',
 				description: 'Amount in smallest unit (lamports/atoms)',
@@ -172,10 +176,12 @@ export class JupiterUltra implements INodeType {
 					},
 				},
 			},
+			// Execute operation parameters
 			{
 				displayName: 'Signed Transaction',
 				name: 'signedTransaction',
 				type: 'string',
+				required: true,
 				default: '',
 				description: 'Base64 encoded signed transaction',
 				displayOptions: {
@@ -188,6 +194,7 @@ export class JupiterUltra implements INodeType {
 				displayName: 'Request ID',
 				name: 'requestId',
 				type: 'string',
+				required: true,
 				default: '',
 				description: 'Request ID from the order endpoint',
 				displayOptions: {
@@ -196,10 +203,12 @@ export class JupiterUltra implements INodeType {
 					},
 				},
 			},
+			// Balances operation parameters
 			{
 				displayName: 'Address',
 				name: 'address',
 				type: 'string',
+				required: true,
 				default: '',
 				placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
 				description: 'Wallet address to get balances for',
@@ -209,26 +218,28 @@ export class JupiterUltra implements INodeType {
 					},
 				},
 			},
+			// Shield operation parameters
 			{
 				displayName: 'Mints',
 				name: 'mints',
 				type: 'string',
 				default: '',
 				placeholder: 'mint1,mint2,mint3',
-				description: 'Comma-separated list of mint addresses',
+				description: 'Comma-separated list of mint addresses (optional)',
 				displayOptions: {
 					show: {
 						operation: ['shield'],
 					},
 				},
 			},
+			// Search operation parameters
 			{
 				displayName: 'Search Query',
 				name: 'query',
 				type: 'string',
 				default: '',
 				placeholder: 'USDC',
-				description: 'Search query for tokens',
+				description: 'Search query for tokens (optional)',
 				displayOptions: {
 					show: {
 						operation: ['search'],
@@ -259,7 +270,6 @@ export class JupiterUltra implements INodeType {
 						const amount = this.getNodeParameter('amount', itemIndex) as string;
 						const taker = this.getNodeParameter('taker', itemIndex) as string;
 						const referralAccount = this.getNodeParameter('referralAccount', itemIndex) as string;
-						const referralFee = this.getNodeParameter('referralFee', itemIndex) as number;
 						const excludeRouters = this.getNodeParameter('excludeRouters', itemIndex) as string;
 
 						url = `${baseUrl}/order`;
@@ -267,8 +277,11 @@ export class JupiterUltra implements INodeType {
 						queryParams.outputMint = outputMint;
 						queryParams.amount = amount;
 						if (taker) queryParams.taker = taker;
-						if (referralAccount) queryParams.referralAccount = referralAccount;
-						if (referralFee) queryParams.referralFee = referralFee;
+						if (referralAccount) {
+							queryParams.referralAccount = referralAccount;
+							const referralFee = this.getNodeParameter('referralFee', itemIndex) as number;
+							if (referralFee) queryParams.referralFee = referralFee;
+						}
 						if (excludeRouters) queryParams.excludeRouters = excludeRouters;
 						break;
 
@@ -292,7 +305,7 @@ export class JupiterUltra implements INodeType {
 					case 'shield':
 						const mints = this.getNodeParameter('mints', itemIndex) as string;
 						url = `${baseUrl}/shield`;
-						queryParams.mints = mints;
+						if (mints) queryParams.mints = mints;
 						break;
 
 					case 'routers':
@@ -302,7 +315,7 @@ export class JupiterUltra implements INodeType {
 					case 'search':
 						const query = this.getNodeParameter('query', itemIndex) as string;
 						url = `${baseUrl}/search`;
-						queryParams.query = query;
+						if (query) queryParams.query = query;
 						break;
 
 					default:
