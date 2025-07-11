@@ -43,7 +43,11 @@
     ],
     "nodes": [
       "dist/nodes/JupiterToken/JupiterToken.node.js",
-      "dist/nodes/JupiterUltra/JupiterUltra.node.js"
+      "dist/nodes/JupiterUltra/JupiterUltra.node.js",
+      "dist/nodes/JupiterPrice/JupiterPrice.node.js",
+      "dist/nodes/JupiterRecurring/JupiterRecurring.node.js",
+      "dist/nodes/JupiterTrigger/JupiterTrigger.node.js",
+      "dist/nodes/JupiterSwap/JupiterSwap.node.js"
     ]
   },
   "devDependencies": {
