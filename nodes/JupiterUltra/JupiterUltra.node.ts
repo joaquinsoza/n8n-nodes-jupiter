@@ -322,11 +322,15 @@ export class JupiterUltra implements INodeType {
 					options.body = body;
 				}
 
-				const credentials = await this.getCredentials('jupiterApi');
-				if (credentials && credentials.apiKey) {
-					options.headers = {
-						'x-api-key': credentials.apiKey as string,
-					};
+				try {
+					const credentials = await this.getCredentials('jupiterApi');
+					if (credentials && credentials.apiKey) {
+						options.headers = {
+							'x-api-key': credentials.apiKey as string,
+						};
+					}
+				} catch (error) {
+					// No credentials provided, continue without API key
 				}
 
 				const response = await this.helpers.httpRequest(options);
